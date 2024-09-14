@@ -1,8 +1,11 @@
 // src/components/GameFinish.js
 import React from 'react';
 import { Box, Button, Typography } from '@mui/material'; // Import necessary components
+import { useTheme } from '@mui/material/styles'; // Import useTheme for accessing theme properties
 
 const GameFinish = ({ totalGuesses, score, onPlayAgain }) => {
+  const theme = useTheme(); // Access the theme to use its colors and styles
+
   return (
     <Box sx={{ textAlign: 'center', marginTop: '2rem' }}>
       <Typography variant="h4" gutterBottom>
@@ -15,12 +18,13 @@ const GameFinish = ({ totalGuesses, score, onPlayAgain }) => {
         variant="contained"
         onClick={onPlayAgain}
         sx={{
-          backgroundColor: '#4B0082', // Dark purple color
-          color: '#fff', // Text color
+          backgroundColor: theme.palette.primary.main, // Use primary color from theme
+          color: theme.palette.primary.contrastText, // Use text color from theme
           '&:hover': {
-            backgroundColor: '#3a0065', // Darker shade of purple for hover effect
+            backgroundColor: theme.palette.primary.dark, // Automatically generated darker shade for hover
           },
           marginTop: '1rem', // Add some spacing above the button
+          borderRadius: theme.shape.borderRadius, // Use consistent border radius from theme
         }}
       >
         Play Again

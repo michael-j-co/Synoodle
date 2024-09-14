@@ -71,8 +71,8 @@ const InputSynonym = ({ onSynonymGuess, incorrect, shouldClear }) => {
             border: 'none', // Remove the border of the input box
             '& fieldset': { border: 'none' }, // Ensure no border appears on focus
             '& input': {
-              color: '#8a2be2', // Set input text color to light purple
-              caretColor: '#8a2be2', // Set the cursor color to light purple
+              color: '#FF6347', // Updated to match primary color (tomato red)
+              caretColor: '#FF6347', // Updated cursor color to match primary color
               textAlign: 'center', // Center text inside the input
               fontSize: '1.5rem', // Increase font size to make input appear larger
               padding: '16px 20px', // Add padding to increase input height
@@ -81,8 +81,8 @@ const InputSynonym = ({ onSynonymGuess, incorrect, shouldClear }) => {
         }}
         inputProps={{
           style: {
-            color: '#8a2be2', // Ensure input text is purple
-            caretColor: '#8a2be2', // Ensure cursor color is purple
+            color: '#FF6347', // Ensure input text matches primary color (tomato red)
+            caretColor: '#FF6347', // Ensure cursor color matches primary color
             fontSize: '1.5rem', // Adjust font size for larger input
             textAlign: 'center', // Center text inside the input
           },

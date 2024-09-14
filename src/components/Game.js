@@ -11,6 +11,7 @@ import GameTitle from './GameTitle';
 import GuessesDisplay from './GuessesDisplay';
 import GameFinish from './GameFinish';
 import { CSSTransition } from 'react-transition-group';
+import Toolbar from './Toolbar'; // Import Toolbar
 import './FeedbackMessage.css'; // Import FeedbackMessage styles
 import './InputSynonym.css'; // Import the CSS for InputSynonym shake effect
 
@@ -90,11 +91,11 @@ const Game = () => {
         setShowFeedback({ show: true, message: 'Good!', points });
         setShouldClear(true); // Prepare to clear the input
 
-        // Hide feedback and clear input after 1.5 seconds for correct guesses
+        // Hide feedback and clear input quickly for correct guesses
         setTimeout(() => {
           setShowFeedback({ show: false, message: '', points: 0 }); // Hide and clear message
           setShouldClear(false); // Reset clear state
-        }, 1500); // Correct guess feedback lasts for 1.5 seconds
+        }, 500); // Correct guess feedback disappears quickly
       } else {
         // Feedback for repeated correct guesses
         setShowFeedback({ show: true, message: 'Already guessed!', points: 0 });
@@ -107,16 +108,13 @@ const Game = () => {
       // Handle incorrect guesses
       setIncorrectGuess(true); // Set incorrect guess to trigger shake effect
       setShowFeedback({ show: true, message: 'Incorrect guess!', points: 0 });
+      setShouldClear(true); // Prepare to clear the input
 
       setTimeout(() => {
         setIncorrectGuess(false); // Reset incorrect guess after shake
-        setShouldClear(true); // Clear input after shake completes
-      }, 1000); // Shake effect duration within 1.5 seconds
-
-      setTimeout(() => {
         setShowFeedback({ show: false, message: '', points: 0 });
         setShouldClear(false); // Reset clear state
-      }, 1500); // Feedback and input clearing at 1.5 seconds
+      }, 2000); // Longer duration for incorrect guesses to linger
     }
 
     // Check if the game is over
@@ -146,31 +144,92 @@ const Game = () => {
     fetchWordAndSynonyms();
   };
 
+  // Hint handler to reveal an entire word
+  const handleRevealHint = () => {
+    // Find all synonyms that haven't been guessed yet
+    const unguessedSynonyms = synonyms.filter(
+      (synObj) => guessedSynonyms[synObj.synonym] !== synObj.synonym
+    );
+
+    if (unguessedSynonyms.length > 0) {
+      // Pick a random synonym that hasn't been guessed
+      const randomSynonymObj =
+        unguessedSynonyms[Math.floor(Math.random() * unguessedSynonyms.length)];
+
+      // Reveal the synonym as if it was guessed correctly
+      setGuessedSynonyms((prevGuesses) => ({
+        ...prevGuesses,
+        [randomSynonymObj.synonym]: randomSynonymObj.synonym, // Fully reveal the guessed word
+      }));
+
+      // Increase score for the hint-revealed guess
+      const points = 0;
+      setScore((prevScore) => prevScore + points);
+
+      // Show feedback for the revealed word
+      setShowFeedback({
+        show: true,
+        message: `Hint used! Revealed: ${randomSynonymObj.synonym}`,
+        points,
+      });
+
+      // Hide feedback after some time
+      setTimeout(() => setShowFeedback({ show: false, message: '', points: 0 }), 2000);
+    }
+  };
+
   return (
     <Box
       sx={{
         backgroundColor: '#ffffff',
         minHeight: '100vh',
         width: '100%',
-        padding: '2rem',
+        padding: '2rem 0', // Top and bottom padding only
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        justifyContent: 'flex-start', // Align items at the start
       }}
     >
-      <Box sx={{ position: 'fixed', top: '20px' }}>
+      {/* Title Section with Bottom Border */}
+      <Box
+        sx={{
+          width: '100%',
+          padding: '1rem 0',
+          textAlign: 'center',
+          borderBottom: '1px solid #e0e0e0', // Horizontal line
+          marginBottom: '1rem',
+        }}
+      >
         <GameTitle />
       </Box>
 
+      {/* Toolbar Section with Bottom Border */}
+      <Box
+        sx={{
+          width: '100%',
+          padding: '0.5rem 1rem',
+          display: 'flex',
+          justifyContent: 'center',
+          borderBottom: '1px solid #e0e0e0', // Horizontal line
+          marginBottom: '1rem',
+        }}
+      >
+        <Toolbar onRevealHint={handleRevealHint} />
+      </Box>
+
+      {/* Main Game Logic and Components */}
       <CSSTransition
         in={!isTransitioning}
         timeout={1000}
         classNames="fade"
         unmountOnExit
       >
-        <Grid container spacing={4} sx={{ maxWidth: '1000px', marginTop: '80px' }}>
+        <Grid
+          container
+          spacing={4}
+          sx={{ maxWidth: '1000px', width: '100%' }} // Ensure content fits within the width
+        >
           <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <WordDisplay word={word} />
 
@@ -219,6 +278,7 @@ const Game = () => {
         </Grid>
       </CSSTransition>
 
+      {/* Game Finish Logic */}
       <CSSTransition
         in={isTransitioning && gameOver}
         timeout={1000}
