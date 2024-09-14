@@ -11,16 +11,20 @@ import GameTitle from './GameTitle';
 import GuessesDisplay from './GuessesDisplay';
 import GameFinish from './GameFinish';
 import { CSSTransition } from 'react-transition-group';
+import './FeedbackMessage.css'; // Import FeedbackMessage styles
+import './InputSynonym.css'; // Import the CSS for InputSynonym shake effect
 
 const Game = () => {
   const [word, setWord] = useState('');
-  const [synonyms, setSynonyms] = useState([]);  // Initialize as an empty array
+  const [synonyms, setSynonyms] = useState([]); // Initialize as an empty array
   const [score, setScore] = useState(0);
   const [guessedSynonyms, setGuessedSynonyms] = useState({});
-  const [guessedLetters, setGuessedLetters] = useState(new Set());  // New state for guessed letters
+  const [guessedLetters, setGuessedLetters] = useState(new Set()); // New state for guessed letters
   const [showFeedback, setShowFeedback] = useState({ show: false, message: '', points: 0 });
   const [gameOver, setGameOver] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [incorrectGuess, setIncorrectGuess] = useState(false); // State to track incorrect guesses
+  const [shouldClear, setShouldClear] = useState(false); // State to control input clearing
   const totalGuesses = synonyms.length; // This is now safe as synonyms is initialized as an empty array
 
   // Fetch a random word and its synonyms from Supabase
@@ -48,7 +52,7 @@ const Game = () => {
           }
         });
         setGuessedSynonyms(initialGuesses);
-        setGuessedLetters(new Set());  // Reset guessed letters when fetching a new word
+        setGuessedLetters(new Set()); // Reset guessed letters when fetching a new word
       } else {
         console.error('No data found in Supabase.');
       }
@@ -64,32 +68,63 @@ const Game = () => {
   const handleSynonymGuess = (guessedSynonym) => {
     const lowerGuessedSynonym = guessedSynonym.toLowerCase();
     const matchedSynonymObj = synonyms.find(
-      (synObj) => typeof synObj.synonym === 'string' && synObj.synonym.toLowerCase() === lowerGuessedSynonym
+      (synObj) =>
+        typeof synObj.synonym === 'string' &&
+        synObj.synonym.toLowerCase() === lowerGuessedSynonym
     );
 
     if (matchedSynonymObj) {
-      setGuessedSynonyms((prevGuesses) => ({
-        ...prevGuesses,
-        [matchedSynonymObj.synonym]: matchedSynonymObj.synonym,
-      }));
+      const alreadyGuessed = guessedSynonyms[matchedSynonymObj.synonym] === matchedSynonymObj.synonym;
 
-      // Add all unique letters from the guessed synonym to the guessedLetters set
-      const uniqueLetters = new Set(matchedSynonymObj.synonym.toLowerCase().split(''));
-      setGuessedLetters((prevGuessedLetters) => new Set([...prevGuessedLetters, ...uniqueLetters]));
+      if (!alreadyGuessed) {
+        setGuessedSynonyms((prevGuesses) => ({
+          ...prevGuesses,
+          [matchedSynonymObj.synonym]: matchedSynonymObj.synonym, // Fully reveal the guessed word
+        }));
 
-      // Use the length (score) for points
-      const points = matchedSynonymObj.score; // Updated to use score instead of lengthScore
-      setScore((prevScore) => prevScore + points);
-      setShowFeedback({ show: true, message: 'Good!', points });
+        // Increase score for correct guesses
+        const points = matchedSynonymObj.score;
+        setScore((prevScore) => prevScore + points);
+
+        // Show feedback for a new correct guess
+        setShowFeedback({ show: true, message: 'Good!', points });
+        setShouldClear(true); // Prepare to clear the input
+
+        // Hide feedback and clear input after 1.5 seconds for correct guesses
+        setTimeout(() => {
+          setShowFeedback({ show: false, message: '', points: 0 }); // Hide and clear message
+          setShouldClear(false); // Reset clear state
+        }, 1500); // Correct guess feedback lasts for 1.5 seconds
+      } else {
+        // Feedback for repeated correct guesses
+        setShowFeedback({ show: true, message: 'Already guessed!', points: 0 });
+
+        setTimeout(() => {
+          setShowFeedback({ show: false, message: '', points: 0 });
+        }, 1500); // Standard duration for repeated guesses
+      }
+    } else {
+      // Handle incorrect guesses
+      setIncorrectGuess(true); // Set incorrect guess to trigger shake effect
+      setShowFeedback({ show: true, message: 'Incorrect guess!', points: 0 });
+
+      setTimeout(() => {
+        setIncorrectGuess(false); // Reset incorrect guess after shake
+        setShouldClear(true); // Clear input after shake completes
+      }, 1000); // Shake effect duration within 1.5 seconds
 
       setTimeout(() => {
         setShowFeedback({ show: false, message: '', points: 0 });
-      }, 2000);
+        setShouldClear(false); // Reset clear state
+      }, 1500); // Feedback and input clearing at 1.5 seconds
+    }
 
-      // Check if the game is over
-      if (Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length + 1 === totalGuesses) {
-        setIsTransitioning(true);
-      }
+    // Check if the game is over
+    if (
+      Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length + 1 ===
+      totalGuesses
+    ) {
+      setIsTransitioning(true);
     }
   };
 
@@ -129,10 +164,6 @@ const Game = () => {
         <GameTitle />
       </Box>
 
-      {showFeedback.show && (
-        <FeedbackMessage message={showFeedback.message} points={showFeedback.points} />
-      )}
-
       <CSSTransition
         in={!isTransitioning}
         timeout={1000}
@@ -140,20 +171,49 @@ const Game = () => {
         unmountOnExit
       >
         <Grid container spacing={4} sx={{ maxWidth: '1000px', marginTop: '80px' }}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <WordDisplay word={word} />
 
-            <Box sx={{ marginTop: '2rem' }}>
-              <InputSynonym onSynonymGuess={handleSynonymGuess} />
+            <Box
+              sx={{
+                marginTop: '2rem',
+                display: 'flex',
+                flexDirection: 'column', // Ensure column layout
+                alignItems: 'center', // Center horizontally
+                width: '100%',
+                position: 'relative', // Make the parent container relative
+              }}
+            >
+              {/* InputSynonym with incorrect prop */}
+              <InputSynonym onSynonymGuess={handleSynonymGuess} incorrect={incorrectGuess} shouldClear={shouldClear} />
+
+              {/* FeedbackMessage positioned absolutely below InputSynonym */}
+              {showFeedback.show && (
+                <FeedbackMessage
+                  show={showFeedback.show}
+                  message={showFeedback.message}
+                  points={showFeedback.points}
+                  sx={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', mt: 2 }} // Center below input field
+                />
+              )}
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          >
             <ProgressDots
-              guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length}
+              guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_'))
+                .length}
               total={totalGuesses}
             />
-            <GuessesDisplay synonyms={guessedSynonyms} guessedLetters={guessedLetters} /> {/* Pass guessedLetters */}
+            <GuessesDisplay
+              synonyms={guessedSynonyms}
+              guessedLetters={guessedLetters}
+            />
             <ScoreBoard score={score} />
           </Grid>
         </Grid>
@@ -166,7 +226,11 @@ const Game = () => {
         unmountOnExit
       >
         <Box>
-          <GameFinish totalGuesses={totalGuesses} score={score} onPlayAgain={handlePlayAgain} />
+          <GameFinish
+            totalGuesses={totalGuesses}
+            score={score}
+            onPlayAgain={handlePlayAgain}
+          />
         </Box>
       </CSSTransition>
     </Box>
