@@ -2,12 +2,16 @@
 import React from 'react';
 
 const Blanks = ({ synonyms }) => {
+  // Calculate the number of guessed words
+  const guessedWordsCount = Object.values(synonyms).filter(display => !display.includes('_')).length;
+
   return (
     <div>
-      <h2>Synonym Blanks</h2>
+      {/* Display the number of words guessed dynamically */}
+      <h2>You have found {guessedWordsCount} words</h2>
+
       {Object.keys(synonyms).map((synonym, index) => {
         const display = synonyms[synonym];
-        const length = synonym.length;
 
         return (
           <div key={index}>

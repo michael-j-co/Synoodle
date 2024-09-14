@@ -8,7 +8,7 @@ const FeedbackMessage = ({ message, points }) => (
     initial={{ opacity: 0, y: -20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.5 }}
+    transition={{ duration: 0.25 }}
     style={{ position: 'absolute', top: '10%', textAlign: 'center', color: '#8a2be2' }}
   >
     <Typography variant="h4">{message}</Typography>

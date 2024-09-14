@@ -46,6 +46,24 @@
   max-width: 600px; /* Maximum width for large screens */
   color: #333; /* Darker text for better readability */
 }
+/* src/App.css */
+/* src/App.css */
+
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 1000ms;
+}
+.fade-exit {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 1000ms;
+}
+
 
 /* Link Styling */
 .App-link {

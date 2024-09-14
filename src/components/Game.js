@@ -6,70 +6,109 @@ import InputSynonym from './InputSynonym';
 import ScoreBoard from './ScoreBoard';
 import { Box, Grid } from '@mui/material';
 import FeedbackMessage from './FeedbackMessage';
-import ProgressSlider from './ProgressSlider';
+import ProgressDots from './ProgressDots';
 import GameTitle from './GameTitle';
-import GuessesDisplay from './GuessesDisplay'; // Import the new GuessesDisplay component
+import GuessesDisplay from './GuessesDisplay';
+import GameFinish from './GameFinish';
+import { CSSTransition } from 'react-transition-group';
 
 const Game = () => {
   const [word, setWord] = useState('');
-  const [synonyms, setSynonyms] = useState([]);
+  const [synonyms, setSynonyms] = useState([]);  // Initialize as an empty array
   const [score, setScore] = useState(0);
   const [guessedSynonyms, setGuessedSynonyms] = useState({});
+  const [guessedLetters, setGuessedLetters] = useState(new Set());  // New state for guessed letters
   const [showFeedback, setShowFeedback] = useState({ show: false, message: '', points: 0 });
-  const totalGuesses = synonyms.length; // Total number of synonyms to guess
+  const [gameOver, setGameOver] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const totalGuesses = synonyms.length; // This is now safe as synonyms is initialized as an empty array
 
-  useEffect(() => {
-    const fetchWordAndSynonyms = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('words')
-          .select('word, synonyms')
-          .limit(1)
-          .single();
+  // Fetch a random word and its synonyms from Supabase
+  const fetchWordAndSynonyms = async () => {
+    try {
+      const { data, error } = await supabase.from('words').select('word, synonyms');
 
-        if (error) {
-          console.error('Error fetching word and synonyms:', error.message);
-          return;
-        }
+      if (error) {
+        console.error('Error fetching word and synonyms:', error.message);
+        return;
+      }
 
-        console.log('Fetched data:', data); // Log to see the fetched data
-        setWord(data.word);
-        setSynonyms(data.synonyms);
+      if (data && data.length > 0) {
+        const randomWord = data[Math.floor(Math.random() * data.length)];
+        setWord(randomWord.word);
 
-        // Initialize guessed synonyms state with underscores
+        const synonymsArray = Array.isArray(randomWord.synonyms) ? randomWord.synonyms : [];
+
+        setSynonyms(synonymsArray);
+
         const initialGuesses = {};
-        data.synonyms.forEach((syn) => {
-          initialGuesses[syn.synonym] = '_'.repeat(syn.synonym.length);
+        synonymsArray.forEach((synObj) => {
+          if (synObj && typeof synObj.synonym === 'string') {
+            initialGuesses[synObj.synonym] = '_'.repeat(synObj.synonym.length);
+          }
         });
         setGuessedSynonyms(initialGuesses);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        setGuessedLetters(new Set());  // Reset guessed letters when fetching a new word
+      } else {
+        console.error('No data found in Supabase.');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
-    fetchWordAndSynonyms();
+  useEffect(() => {
+    fetchWordAndSynonyms(); // Fetch a word when the component mounts
   }, []);
 
   const handleSynonymGuess = (guessedSynonym) => {
     const lowerGuessedSynonym = guessedSynonym.toLowerCase();
-    const matchedSynonym = synonyms.find(
-      (syn) => syn.synonym.toLowerCase() === lowerGuessedSynonym
+    const matchedSynonymObj = synonyms.find(
+      (synObj) => typeof synObj.synonym === 'string' && synObj.synonym.toLowerCase() === lowerGuessedSynonym
     );
 
-    if (matchedSynonym) {
+    if (matchedSynonymObj) {
       setGuessedSynonyms((prevGuesses) => ({
         ...prevGuesses,
-        [matchedSynonym.synonym]: matchedSynonym.synonym,
+        [matchedSynonymObj.synonym]: matchedSynonymObj.synonym,
       }));
 
-      const points = matchedSynonym.obscurityScore;
+      // Add all unique letters from the guessed synonym to the guessedLetters set
+      const uniqueLetters = new Set(matchedSynonymObj.synonym.toLowerCase().split(''));
+      setGuessedLetters((prevGuessedLetters) => new Set([...prevGuessedLetters, ...uniqueLetters]));
+
+      // Use the length (score) for points
+      const points = matchedSynonymObj.score; // Updated to use score instead of lengthScore
       setScore((prevScore) => prevScore + points);
       setShowFeedback({ show: true, message: 'Good!', points });
 
       setTimeout(() => {
         setShowFeedback({ show: false, message: '', points: 0 });
       }, 2000);
+
+      // Check if the game is over
+      if (Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length + 1 === totalGuesses) {
+        setIsTransitioning(true);
+      }
     }
+  };
+
+  useEffect(() => {
+    if (isTransitioning) {
+      const timer = setTimeout(() => {
+        setGameOver(true);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
+
+  const handlePlayAgain = () => {
+    setScore(0);
+    setGuessedSynonyms({});
+    setGameOver(false);
+    setIsTransitioning(false);
+    fetchWordAndSynonyms();
   };
 
   return (
@@ -83,37 +122,53 @@ const Game = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative',
       }}
     >
-      {/* Game Title */}
-      <GameTitle />
+      <Box sx={{ position: 'fixed', top: '20px' }}>
+        <GameTitle />
+      </Box>
 
-      {/* Feedback Animation */}
       {showFeedback.show && (
         <FeedbackMessage message={showFeedback.message} points={showFeedback.points} />
       )}
 
-      <Grid container spacing={4} sx={{ maxWidth: '1000px' }}>
-        {/* Left side: Word Display and Input */}
-        <Grid item xs={12} md={6}>
-          <WordDisplay word={word} />
+      <CSSTransition
+        in={!isTransitioning}
+        timeout={1000}
+        classNames="fade"
+        unmountOnExit
+      >
+        <Grid container spacing={4} sx={{ maxWidth: '1000px', marginTop: '80px' }}>
+          <Grid item xs={12} md={6}>
+            <WordDisplay word={word} />
 
-          {/* Custom Input Component */}
-          <Box sx={{ marginTop: '2rem' }}>
-            <InputSynonym onSynonymGuess={handleSynonymGuess} />
-          </Box>
-        </Grid>
+            <Box sx={{ marginTop: '2rem' }}>
+              <InputSynonym onSynonymGuess={handleSynonymGuess} />
+            </Box>
+          </Grid>
 
-        {/* Right side: Correct Guesses and Progress Slider */}
-        <Grid item xs={12} md={6}>
-          <ProgressSlider
-            guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length}
-            total={totalGuesses}
-          />
-          <GuessesDisplay synonyms={guessedSynonyms} /> {/* Updated to use GuessesDisplay */}
-          <ScoreBoard score={score} />
+          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <ProgressDots
+              guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length}
+              total={totalGuesses}
+            />
+            <GuessesDisplay synonyms={guessedSynonyms} guessedLetters={guessedLetters} /> {/* Pass guessedLetters */}
+            <ScoreBoard score={score} />
+          </Grid>
         </Grid>
-      </Grid>
+      </CSSTransition>
+
+      <CSSTransition
+        in={isTransitioning && gameOver}
+        timeout={1000}
+        classNames="fade"
+        unmountOnExit
+      >
+        <Box>
+          <GameFinish totalGuesses={totalGuesses} score={score} onPlayAgain={handlePlayAgain} />
+        </Box>
+      </CSSTransition>
     </Box>
   );
 };
