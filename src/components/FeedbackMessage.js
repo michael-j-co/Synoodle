@@ -4,27 +4,42 @@ import { CSSTransition } from 'react-transition-group';
 import { Typography, useTheme } from '@mui/material';
 import './FeedbackMessage.css'; // Import the CSS file for animations
 
-const FeedbackMessage = ({ message, points, show }) => {
+const FeedbackMessage = ({ message, points, show, type = 'success' }) => {
   const theme = useTheme(); // Access the theme
   const [internalShow, setInternalShow] = useState(false); // Internal state to control visibility
-  const [displayMessage, setDisplayMessage] = useState({ message: '', points: 0 }); // State to store message and points
 
   useEffect(() => {
     if (show) {
-      // If 'show' prop is true, update the message and show it
-      setDisplayMessage({ message, points });
-      setInternalShow(true);
+      setInternalShow(true); // Show feedback when the 'show' prop is true
     } else {
-      // Hide the message after a short delay to match the animation duration
-      const timer = setTimeout(() => setInternalShow(false), 150); // 150ms duration for shorter animation
+      const timer = setTimeout(() => setInternalShow(false), 200); // Slight delay to match the animation duration
       return () => clearTimeout(timer);
     }
-  }, [show, message, points]);
+  }, [show]);
+
+  // Determine the color based on the type of message
+  const getMessageStyle = () => {
+    if (type === 'success') {
+      return {
+        color: theme.palette.success.main, // Green color for success
+      };
+    } else if (type === 'error') {
+      return {
+        color: theme.palette.error.main, // Red color for errors
+      };
+    } else {
+      return {
+        color: theme.palette.text.primary, // Default text color
+      };
+    }
+  };
+
+  const { color } = getMessageStyle(); // Destructure color from getMessageStyle()
 
   return (
     <CSSTransition
       in={internalShow} // Use internalShow for transition control
-      timeout={150} // Shorter duration for the fade-in and fade-out
+      timeout={200} // Slightly longer duration for a smoother animation
       classNames="fade-pop" // Corresponding class names for the transition
       unmountOnExit
     >
@@ -35,14 +50,19 @@ const FeedbackMessage = ({ message, points, show }) => {
           top: '100%', // Positioned below the input component
           left: '50%', // Center horizontally
           transform: 'translateX(-50%)', // Adjust position for perfect centering
-          textAlign: 'center', // Center align the text
-          color: theme.palette.secondary.main, // Apply light purple color from theme
-          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Optional: Light background to stand out
-          padding: '0.2rem 0.5rem', // Small padding around the text
-          borderRadius: '4px', // Rounded corners
+          display: 'flex', // Flexbox for text alignment
+          alignItems: 'center', // Center items vertically
+          justifyContent: 'center', // Center items horizontally
+          color: color, // Dynamic color based on message type
+          backgroundColor: 'rgba(255, 255, 255, 0.85)', // Slightly opaque background
+          padding: '0.4rem 0.8rem', // More padding for better touch target
+          borderRadius: '6px', // Rounded corners
+          boxShadow: theme.shadows[2], // Subtle shadow for depth
+          transition: 'all 0.3s ease', // Smooth transition for hover effects
+          zIndex: 10, // Higher z-index to stay above other elements
         }}
       >
-        {displayMessage.message} +{displayMessage.points} points!
+        {message} {points ? `+${points} points!` : ''}
       </Typography>
     </CSSTransition>
   );
