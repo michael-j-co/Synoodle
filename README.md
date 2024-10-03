@@ -49,7 +49,6 @@ This project is a synonym guessing game built with React. Users attempt to guess
 ## Screenshots
 
 ![Game Interface](screenshots/game-interface.png)
-![Celebration Effect](screenshots/celebration.png)
 
 ## License
 
