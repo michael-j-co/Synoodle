@@ -1,70 +1,56 @@
-# Getting Started with Create React App
+# Synonym Guessing Game
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a synonym guessing game built with React. Users attempt to guess synonyms of a given word, and receive feedback based on their guesses, including sound effects and visual celebrations for correct answers.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Word and Synonym Data**: The game fetches word and synonym data in real time from Supabase.
+- **Dynamic UI**: The interface is built using Material UI (MUI) for responsive layout and a polished user experience.
+- **Interactive Feedback**: The game includes sound effects for correct and incorrect guesses using `use-sound` and confetti animation for winning rounds, enhancing engagement.
+- **Game Progress and Score Tracking**: Displays progress using dots, a scoreboard, and dynamically updates based on user input.
+- **Hint and Restart Functionality**: Users can reveal a hint for a synonym or restart the game at any time.
+- **Smooth Transitions**: Animations for showing and hiding game components using `react-transition-group`.
 
-### `npm start`
+## Technologies Used
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **React**: For building the interactive user interface.
+- **Supabase**: A backend-as-a-service used for managing the word and synonym data.
+- **Material UI (MUI)**: For creating a responsive and visually appealing layout.
+- **React Transition Group**: To create smooth component transitions and animations.
+- **use-sound**: For adding interactive sound effects.
+- **Canvas-Confetti**: For celebratory animations on successful rounds.
+- **CSS Modules**: Custom styles for specific components like feedback messages and input fields.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Components Overview
 
-### `npm test`
+- **WordDisplay**: Displays the word that the user has to guess synonyms for.
+- **InputSynonym**: Handles user input for guessing synonyms.
+- **ScoreBoard**: Displays the user's current score.
+- **ProgressDots**: Visualizes the user's progress in guessing synonyms.
+- **FeedbackMessage**: Shows feedback on the user's guesses (correct, incorrect, or already guessed).
+- **GuessesDisplay**: Shows the synonyms guessed so far and their corresponding letters.
+- **GameFinish**: Displays the end game screen with options to play again.
+- **Toolbar**: Provides controls for restarting the game, revealing hints, and accessing settings.
+- **GameTitle**: Displays the title of the game.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## How to Run the Project
 
-### `npm run build`
+1. Clone the repository.
+2. Install the dependencies using `npm install`.
+3. Set up Supabase credentials in `supabaseClient.js`.
+4. Run the project using `npm start`.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Future Improvements
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Add difficulty levels to vary the word complexity.
+- Implement user accounts to save high scores and track progress.
+- Add a leaderboard to encourage competition among users.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Screenshots
 
-### `npm run eject`
+![Game Interface](screenshots/game-interface.png)
+![Celebration Effect](screenshots/celebration.png)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## License
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is open-source and available under the MIT License.
