@@ -3,23 +3,69 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import WordDisplay from './WordDisplay';
 import InputSynonym from './InputSynonym';
-import ScoreBoard from './ScoreBoard';
-import { Box, Grid } from '@mui/material';
 import FeedbackMessage from './FeedbackMessage';
-import ProgressDots from './ProgressDots';
-import GameTitle from './GameTitle';
-import GuessesDisplay from './GuessesDisplay';
+import ProgressSection from './ProgressSection';
 import GameFinish from './GameFinish';
-import { CSSTransition } from 'react-transition-group';
-import Toolbar from './Toolbar'; // Import Toolbar
-import useSound from 'use-sound'; // Import use-sound for sound effects
-import confetti from 'canvas-confetti'; // Import confetti for celebration
-import './FeedbackMessage.css';
-import './InputSynonym.css';
+import Toolbar from './Toolbar';
+import useSound from 'use-sound';
+import confetti from 'canvas-confetti';
+import styled from 'styled-components'; // Import styled-components for custom styling
+import {Section} from './SharedStyles';
+import TransitionWrapper from './TransitionWrapper';
 
 const TRANSITION_TIMEOUT = 1000;
 const FEEDBACK_HIDE_TIMEOUT = 1500;
 const INCORRECT_FEEDBACK_TIMEOUT = 2000;
+
+const GameContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  background-color: #FFF;
+  margin: 0;
+  padding: 0;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+`;
+
+// Custom container for the two-column layout
+const GameContent = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #FFF;
+  width: 100%;
+  height: 100%; /* Take full height of parent container */
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+  }
+`;
+
+const Column = styled.div`
+  flex: 1;
+  padding: 1rem;
+
+  &:first-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Vertically center if needed */
+    align-items: center; /* Horizontally center */
+    margin-right: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    margin-right: 0;
+    margin-bottom: 2rem;
+  }
+`;
+
 
 const Game = () => {
   const [word, setWord] = useState('');
@@ -35,7 +81,6 @@ const Game = () => {
   const [isSoundInitialized, setIsSoundInitialized] = useState(false);
   const totalGuesses = synonyms.length;
 
-  // Load sound effects only when enabled
   const [playCorrectSound] = useSound('/sounds/correct.wav', { volume: 0.5, soundEnabled: isSoundInitialized });
   const [playIncorrectSound] = useSound('/sounds/incorrect.wav', { volume: 0.5, soundEnabled: isSoundInitialized });
   const [playWinSound] = useSound('/sounds/win.wav', { volume: 0.5, soundEnabled: isSoundInitialized });
@@ -95,7 +140,7 @@ const Game = () => {
 
           setFeedback({ show: true, message: '🎉 Good!', points });
           setShouldClear(true);
-          if (isSoundInitialized) playCorrectSound(); // Play correct guess sound
+          if (isSoundInitialized) playCorrectSound();
 
           setTimeout(() => {
             setFeedback({ show: false, message: '', points: 0 });
@@ -109,7 +154,7 @@ const Game = () => {
         setIncorrectGuess(true);
         setFeedback({ show: true, message: '❌ Incorrect guess!', points: 0 });
         setShouldClear(true);
-        if (isSoundInitialized) playIncorrectSound(); // Play incorrect guess sound
+        if (isSoundInitialized) playIncorrectSound();
 
         setTimeout(() => {
           setIncorrectGuess(false);
@@ -120,11 +165,11 @@ const Game = () => {
 
       if (Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length + 1 === totalGuesses) {
         setIsTransitioning(true);
-        if (isSoundInitialized) playWinSound(); // Play win sound
-        confetti(); // Trigger confetti animation
+        if (isSoundInitialized) playWinSound();
+        confetti();
       }
     },
-    [synonyms, guessedSynonyms, totalGuesses, isSoundInitialized] // Include isSoundInitialized as dependency
+    [synonyms, guessedSynonyms, totalGuesses, isSoundInitialized]
   );
 
   useEffect(() => {
@@ -134,15 +179,14 @@ const Game = () => {
     }
   }, [isTransitioning]);
 
-  // Function to restart the game
   const handleRestart = () => {
-    setScore(0); // Reset score
-    setGuessedSynonyms({}); // Reset guessed synonyms
-    setGuessedLetters(new Set()); // Reset guessed letters
-    setFeedback({ show: false, message: '', points: 0 }); // Reset feedback message
-    setGameOver(false); // Reset game over state
-    setIsTransitioning(false); // Reset transition state
-    fetchWordAndSynonyms(); // Fetch a new word and synonyms
+    setScore(0);
+    setGuessedSynonyms({});
+    setGuessedLetters(new Set());
+    setFeedback({ show: false, message: '', points: 0 });
+    setGameOver(false);
+    setIsTransitioning(false);
+    fetchWordAndSynonyms();
   };
 
   const handleRevealHint = useCallback(() => {
@@ -168,47 +212,38 @@ const Game = () => {
   }, [synonyms, guessedSynonyms]);
 
   return (
-    <Box sx={{ backgroundColor: '#f0f8ff', minHeight: '100vh', width: '100%', padding: '2rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
-      {/* Toolbar with Restart, Hint, and Settings Buttons */}
+    <GameContainer>
+      {/* Toolbar at the top of the page */}
       <Toolbar onRevealHint={handleRevealHint} onRestart={handleRestart} onSettings={() => console.log('Settings clicked!')} />
 
-      {/* Game Title */}
-      <Box sx={{ width: '100%', padding: '1rem 0', textAlign: 'center', borderBottom: '1px solid #e0e0e0', marginBottom: '1rem' }}>
-        <GameTitle />
-      </Box>
+      <GameContent>
+        {/* Left Column: Word Display and Input */}
+        <Column>
+          <WordDisplay word={word} />
+          <InputSynonym onSynonymGuess={handleSynonymGuess} incorrect={incorrectGuess} shouldClear={shouldClear} />
+          {feedback.show && (
+            <FeedbackMessage message={feedback.message} incorrect={incorrectGuess} />
+          )}
+        </Column>
 
-      {/* Main Game Content */}
-      <CSSTransition in={!isTransitioning} timeout={TRANSITION_TIMEOUT} classNames="fade" unmountOnExit>
-        <Grid container spacing={4} sx={{ maxWidth: '1000px', width: '100%' }}>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <WordDisplay word={word} />
-            <Box sx={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', position: 'relative' }}>
-              <InputSynonym onSynonymGuess={handleSynonymGuess} incorrect={incorrectGuess} shouldClear={shouldClear} />
-              {feedback.show && (
-                <FeedbackMessage
-                  show={feedback.show}
-                  message={feedback.message}
-                  points={feedback.points}
-                  sx={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', mt: 2 }}
-                />
-              )}
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <ProgressDots guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length} total={totalGuesses} />
-            <GuessesDisplay synonyms={guessedSynonyms} guessedLetters={guessedLetters} />
-            <ScoreBoard score={score} />
-          </Grid>
-        </Grid>
-      </CSSTransition>
+        {/* Right Column: Progress and Guesses */}
+        <Column>
+          <ProgressSection
+            guessedCount={Object.values(guessedSynonyms).filter((val) => !val.includes('_')).length}
+            totalGuesses={totalGuesses}
+            guessedSynonyms={guessedSynonyms}
+            guessedLetters={guessedLetters}
+            score={score}
+          />
+        </Column>
+      </GameContent>
 
-      {/* Game Finish Logic */}
-      <CSSTransition in={isTransitioning && gameOver} timeout={TRANSITION_TIMEOUT} classNames="fade" unmountOnExit>
-        <Box>
+      <TransitionWrapper inProp={isTransitioning && gameOver} timeout={TRANSITION_TIMEOUT}>
+        <Section>
           <GameFinish totalGuesses={totalGuesses} score={score} onPlayAgain={handleRestart} />
-        </Box>
-      </CSSTransition>
-    </Box>
+        </Section>
+      </TransitionWrapper>
+    </GameContainer>
   );
 };
 
