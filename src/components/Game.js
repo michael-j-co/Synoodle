@@ -138,7 +138,7 @@ const Game = () => {
           const points = matchedSynonymObj.score;
           setScore((prevScore) => prevScore + points);
 
-          setFeedback({ show: true, message: '🎉 Good!', points });
+          setFeedback({ show: true, message: 'Good!', points });
           setShouldClear(true);
           if (isSoundInitialized) playCorrectSound();
 
@@ -147,12 +147,12 @@ const Game = () => {
             setShouldClear(false);
           }, FEEDBACK_HIDE_TIMEOUT);
         } else {
-          setFeedback({ show: true, message: '⚠️ Already guessed!', points: 0 });
+          setFeedback({ show: true, message: 'Already guessed!', points: 0 });
           setTimeout(() => setFeedback({ show: false, message: '', points: 0 }), FEEDBACK_HIDE_TIMEOUT);
         }
       } else {
         setIncorrectGuess(true);
-        setFeedback({ show: true, message: '❌ Incorrect guess!', points: 0 });
+        setFeedback({ show: true, message: 'Incorrect guess!', points: 0 });
         setShouldClear(true);
         if (isSoundInitialized) playIncorrectSound();
 
